@@ -78,7 +78,7 @@ export function ShoppingCart({
       </div>
 
       {/* Items */}
-      <div className="p-4 space-y-3 max-h-[60vh] overflow-y-auto">
+      <div className="p-4 space-y-4 max-h-[72vh] overflow-y-auto">
         {items.length === 0 ? (
           <div className="py-10 text-center text-sm text-muted-foreground">
             <ShoppingBag className="h-10 w-10 mx-auto mb-3 opacity-30" />

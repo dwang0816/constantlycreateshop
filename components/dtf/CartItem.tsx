@@ -93,46 +93,41 @@ export function CartItemCard({
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {/* Main row */}
-      <div className="flex gap-3 p-4">
-        {/* Thumbnail */}
-        <div className="shrink-0 w-16 h-16 rounded-lg bg-secondary overflow-hidden relative">
-          {item.thumbnailUrl ? (
-            <Image
-              src={item.thumbnailUrl}
-              alt="Design preview"
-              fill
-              className="object-contain"
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-              No preview
-            </div>
-          )}
-        </div>
+      {/* Large image preview */}
+      <div className="relative w-full h-48 bg-[repeating-conic-gradient(#e5e7eb_0%_25%,#f9fafb_0%_50%)] bg-[length:16px_16px]">
+        {item.thumbnailUrl ? (
+          <Image
+            src={item.thumbnailUrl}
+            alt="Design preview"
+            fill
+            className="object-contain"
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
+            No preview
+          </div>
+        )}
+        {/* Remove button overlaid top-right */}
+        <button
+          onClick={() => onRemove(item.id)}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shadow-sm"
+          aria-label="Remove item"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
 
-        {/* Info */}
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-foreground truncate">{item.variant.title}</p>
+      {/* Info row */}
+      <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground truncate">{item.variant.title}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {item.customData.printWidth.toFixed(2)}" × {item.customData.printHeight.toFixed(2)}" @ {item.customData.dpi} DPI
-          </p>
-          <p className="text-xs text-muted-foreground">{sqIn} sq in</p>
-          <p className="text-sm font-semibold text-foreground mt-1">
-            ${item.price.toFixed(2)}
+            {item.customData.printWidth.toFixed(2)}" × {item.customData.printHeight.toFixed(2)}" · {item.customData.dpi} DPI · {sqIn} sq in
           </p>
         </div>
-
-        {/* Quantity + remove */}
-        <div className="flex flex-col items-end justify-between gap-2 shrink-0">
-          <button
-            onClick={() => onRemove(item.id)}
-            className="text-muted-foreground hover:text-destructive transition-colors"
-            aria-label="Remove item"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          <p className="text-sm font-bold text-foreground">${item.price.toFixed(2)}</p>
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => onQuantityChange(item.id, -1)}

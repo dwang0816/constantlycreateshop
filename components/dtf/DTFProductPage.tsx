@@ -414,9 +414,9 @@ export function DTFProductPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
             {/* Upload zone */}
-            <div className="lg:col-span-2">
+            <div className="xl:col-span-3">
               <ImageUploadZone
                 onFileSelected={handleFileUpload}
                 isUploading={isUploading}
@@ -450,7 +450,7 @@ export function DTFProductPage() {
             </div>
 
             {/* Cart */}
-            <div className="lg:col-span-1">
+            <div className="xl:col-span-2">
               <ShoppingCart
                 items={cartItems}
                 totalPrice={totalPrice}
