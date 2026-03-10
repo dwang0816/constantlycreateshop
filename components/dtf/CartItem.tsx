@@ -84,16 +84,15 @@ export function CartItemCard({
 
   // Fit the image into a max bounding box while preserving aspect ratio.
   // Wide images get full width; tall images get full height.
-  const MAX_W = 220
-  const MAX_H = 260
-  const MIN_H = 110  // so very wide images still show clearly
+  const MAX_W = 280
+  const MAX_H = 320
   let previewW: number, previewH: number
   if (aspectRatio > MAX_W / MAX_H) {
-    // wider relative to the box → constrain by width
+    // wider than the box → constrain by width, height follows exactly
     previewW = MAX_W
-    previewH = Math.max(Math.round(MAX_W / aspectRatio), MIN_H)
+    previewH = Math.round(MAX_W / aspectRatio)
   } else {
-    // taller → constrain by height
+    // taller than the box → constrain by height, width follows exactly
     previewH = MAX_H
     previewW = Math.round(MAX_H * aspectRatio)
   }
