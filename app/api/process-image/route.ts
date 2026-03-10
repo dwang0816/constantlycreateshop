@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
       }).png().toBuffer()
     }
 
-    // --- Photoshop-style trim: bounding box of non-transparent pixels ---
+    // --- Photoshop-style trim: always trim transparent canvas padding ---
     const { data: trimData, info: trimInfo } = await sharp(buffer)
       .ensureAlpha()
       .raw()

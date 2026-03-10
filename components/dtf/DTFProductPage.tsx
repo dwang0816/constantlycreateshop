@@ -100,10 +100,12 @@ export function DTFProductPage() {
         const allowed = ['image/png', 'image/jpeg', 'image/jpg']
         if (!allowed.includes(file.type)) {
           setUploadError('Only PNG and JPEG files are accepted.')
+          setIsUploading(false)
           return
         }
         if (file.size > 100 * 1024 * 1024) {
           setUploadError('File must be under 100 MB.')
+          setIsUploading(false)
           return
         }
 
@@ -112,6 +114,7 @@ export function DTFProductPage() {
           setUploadError(
             'Could not read DPI from this file. Please re-export at 300 DPI from your design app.'
           )
+          setIsUploading(false)
           return
         }
 
@@ -125,6 +128,7 @@ export function DTFProductPage() {
 
         if (!data.success) {
           setUploadError(data.error || 'Image processing failed.')
+          setIsUploading(false)
           return
         }
 

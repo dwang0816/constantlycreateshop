@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
 import { Minus, Plus, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CartItem as CartItemType } from '@/lib/pricing'
@@ -36,10 +35,10 @@ export function CartItemCard({
   const [bgProcessing, setBgProcessing] = useState<'white' | 'black' | null>(null)
   const [isResizing, setIsResizing] = useState(false)
 
+  const aspectRatio = item.customData.printWidth / item.customData.printHeight
   const [targetWidth, setTargetWidth] = useState(item.customData.printWidth.toFixed(3))
   const [targetHeight, setTargetHeight] = useState(item.customData.printHeight.toFixed(3))
   const [targetDpi, setTargetDpi] = useState(300)
-  const aspectRatio = item.customData.printWidth / item.customData.printHeight
 
   const onWidthChange = (val: string) => {
     setTargetWidth(val)
@@ -82,124 +81,113 @@ export function CartItemCard({
 
   const sqIn = (item.customData.printWidth * item.customData.printHeight).toFixed(2)
 
-  // Fit the image into a max bounding box while preserving aspect ratio.
-  // Wide images get full width; tall images get full height.
-  const MAX_W = 280
-  const MAX_H = 320
-  let previewW: number, previewH: number
-  if (aspectRatio > MAX_W / MAX_H) {
-    // wider than the box → constrain by width, height follows exactly
-    previewW = MAX_W
-    previewH = Math.round(MAX_W / aspectRatio)
-  } else {
-    // taller than the box → constrain by height, width follows exactly
-    previewH = MAX_H
-    previewW = Math.round(MAX_H * aspectRatio)
-  }
-
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {/* Main content */}
-      <div className="flex gap-4 p-4">
 
-        {/* Left: image preview sized to actual image proportions */}
-        <div className="shrink-0 relative group" style={{ width: previewW, height: previewH }}>
-          <div
-            className="w-full h-full rounded-lg overflow-hidden relative border border-border/60"
-            style={{
-              backgroundImage:
-                'repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%)',
-              backgroundSize: '12px 12px',
-            }}
-          >
-            {item.thumbnailUrl ? (
-              <Image
+      {/* Main row: small preview left, info right */}
+      <div className="flex gap-3 p-3">
+
+        {/* Left: preview — wrapper shrinks to the img's exact rendered size */}
+        <div className="shrink-0 self-start">
+          {item.thumbnailUrl ? (
+            <div
+              style={{
+                display: 'inline-block',
+                lineHeight: 0,
+                backgroundImage: 'repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%)',
+                backgroundSize: '8px 8px',
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src={item.thumbnailUrl}
                 alt="Design preview"
-                fill
-                className="object-contain"
-                unoptimized
+                style={{ width: 'auto', height: 'auto', maxWidth: 280, maxHeight: 220, display: 'block' }}
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                No preview
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div
+              className="flex items-center justify-center text-muted-foreground text-xs border border-border/50 rounded bg-secondary/30"
+              style={{ width: 80, height: 60 }}
+            >
+              No preview
+            </div>
+          )}
         </div>
 
-        {/* Right: info */}
+        {/* Right: filename + info + quantity/price */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {/* Filename + delete */}
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-semibold text-foreground leading-snug break-all">
+
+          {/* Filename row with remove button */}
+          <div className="flex items-start justify-between gap-1.5">
+            <p className="text-xs font-semibold text-foreground leading-snug break-all">
               {item.filename || 'design.png'}
             </p>
             <button
               onClick={() => onRemove(item.id)}
-              className="shrink-0 mt-0.5 w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+              className="shrink-0 w-6 h-6 rounded-full border border-border flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors"
               aria-label="Remove item"
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3 w-3" />
             </button>
           </div>
 
           {/* Info grid */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-border/60 bg-secondary/30 px-3 py-2.5">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1">
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Print Size</p>
-              <p className="text-xs text-foreground mt-0.5">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Print Size</p>
+              <p className="text-[11px] text-foreground">
                 {item.customData.printWidth.toFixed(2)}" × {item.customData.printHeight.toFixed(2)}"
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Image Size</p>
-              <p className="text-xs text-foreground mt-0.5">
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Image Size</p>
+              <p className="text-[11px] text-foreground">
                 {item.customData.imgWidth} × {item.customData.imgHeight} px
               </p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">DPI</p>
-              <p className="text-xs text-foreground mt-0.5">{item.customData.dpi}</p>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">DPI</p>
+              <p className="text-[11px] text-foreground">{item.customData.dpi}</p>
             </div>
             <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Total Sq In</p>
-              <p className="text-xs text-foreground mt-0.5">{sqIn} sq in</p>
+              <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide">Total Sq In</p>
+              <p className="text-[11px] text-foreground">{sqIn} sq in</p>
             </div>
           </div>
 
           {/* Quantity + price */}
-          <div className="flex items-center justify-between gap-2 mt-auto pt-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Quantity:</span>
-              <div className="flex items-center gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground">Qty:</span>
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => onQuantityChange(item.id, -1)}
-                  className="w-6 h-6 rounded-md border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  className="w-5 h-5 rounded border border-border flex items-center justify-center hover:bg-secondary transition-colors"
                   aria-label="Decrease quantity"
                 >
-                  <Minus className="h-3 w-3" />
+                  <Minus className="h-2.5 w-2.5" />
                 </button>
-                <span className="text-sm font-semibold w-5 text-center">{item.quantity}</span>
+                <span className="text-xs font-semibold w-4 text-center">{item.quantity}</span>
                 <button
                   onClick={() => onQuantityChange(item.id, 1)}
-                  className="w-6 h-6 rounded-md border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  className="w-5 h-5 rounded border border-border flex items-center justify-center hover:bg-secondary transition-colors"
                   aria-label="Increase quantity"
                 >
-                  <Plus className="h-3 w-3" />
+                  <Plus className="h-2.5 w-2.5" />
                 </button>
               </div>
             </div>
-            <p className="text-base font-bold text-primary">
-              ${item.price.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">each</span>
+            <p className="text-sm font-bold text-primary">
+              ${item.price.toFixed(2)} <span className="text-[10px] font-normal text-muted-foreground">each</span>
             </p>
           </div>
+
         </div>
       </div>
 
       {/* Bottom toolbar */}
       <div className="border-t border-border px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
-        {/* Resize checkbox */}
         <label className="flex items-center gap-2 cursor-pointer select-none">
           <input
             type="checkbox"
@@ -211,7 +199,6 @@ export function CartItemCard({
           <span className="text-xs text-destructive italic">(This will alter your original image)</span>
         </label>
 
-        {/* BG removal buttons */}
         <div className="flex gap-2 ml-auto">
           <button
             onClick={handleRemoveWhite}
