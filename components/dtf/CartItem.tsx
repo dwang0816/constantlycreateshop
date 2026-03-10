@@ -81,11 +81,22 @@ export function CartItemCard({
   }
 
   const sqIn = (item.customData.printWidth * item.customData.printHeight).toFixed(2)
-  // Clamp preview aspect ratio so very tall/wide images don't break the layout
-  const clampedRatio = Math.min(Math.max(aspectRatio, 0.3), 3)
-  // Image preview width: 160px fixed, height derived from ratio (max 220px)
-  const previewW = 160
-  const previewH = Math.min(Math.round(previewW / clampedRatio), 220)
+
+  // Fit the image into a max bounding box while preserving aspect ratio.
+  // Wide images get full width; tall images get full height.
+  const MAX_W = 220
+  const MAX_H = 260
+  const MIN_H = 110  // so very wide images still show clearly
+  let previewW: number, previewH: number
+  if (aspectRatio > MAX_W / MAX_H) {
+    // wider relative to the box → constrain by width
+    previewW = MAX_W
+    previewH = Math.max(Math.round(MAX_W / aspectRatio), MIN_H)
+  } else {
+    // taller → constrain by height
+    previewH = MAX_H
+    previewW = Math.round(MAX_H * aspectRatio)
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
