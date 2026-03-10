@@ -3,9 +3,11 @@ import Stripe from 'stripe'
 
 export const runtime = 'nodejs'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-})
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-02-24.acacia',
+  })
+}
 
 export async function GET(
   _req: NextRequest,
@@ -13,7 +15,7 @@ export async function GET(
 ) {
   try {
     const { sessionId } = await params
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
+    const session = await getStripe().checkout.sessions.retrieve(sessionId, {
       expand: ['line_items', 'customer'],
     })
 

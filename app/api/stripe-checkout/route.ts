@@ -6,9 +6,11 @@ import { generateOrderNumber } from '@/lib/db'
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-})
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-02-24.acacia',
+  })
+}
 
 interface AdditionalItem {
   index: number
@@ -114,7 +116,7 @@ export async function POST(req: NextRequest) {
       if (url) imageMetadata[`imageUrl_${i}`] = url
     })
 
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card', 'link'],
       mode: 'payment',
       line_items: lineItems,

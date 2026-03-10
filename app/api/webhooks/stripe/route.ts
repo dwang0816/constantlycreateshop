@@ -6,12 +6,16 @@ export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-})
+function getStripe() {
+  return new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    apiVersion: '2025-02-24.acacia',
+  })
+}
 
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+function initSendGrid() {
+  if (process.env.SENDGRID_API_KEY) {
+    sgMail.setApiKey(process.env.SENDGRID_API_KEY)
+  }
 }
 
 const processedSessions = new Set<string>()
@@ -171,13 +175,14 @@ async function sendCustomerEmail(
 }
 
 export async function POST(req: NextRequest) {
+  initSendGrid()
   const body = await req.arrayBuffer()
   const rawBody = Buffer.from(body)
   const sig = req.headers.get('stripe-signature') ?? ''
 
   let event: Stripe.Event
   try {
-    event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!)
+    event = getStripe().webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!)
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Signature error'
     console.error('Webhook signature error:', message)
