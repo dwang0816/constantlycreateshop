@@ -57,7 +57,7 @@ export function ShoppingCart({
   const currentRate = items[0]?.customData.rate
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden sticky top-24">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2">

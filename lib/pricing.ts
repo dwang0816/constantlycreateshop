@@ -3,6 +3,7 @@ import type { GangSheetVariant } from './variants'
 
 export interface CartItem {
   id: string
+  filename: string
   variant: GangSheetVariant
   price: number
   quantity: number

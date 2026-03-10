@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { Minus, Plus, Trash2, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
+import { Minus, Plus, Trash2, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CartItem as CartItemType } from '@/lib/pricing'
 import { getFileFromIndexedDB } from '@/lib/indexeddb'
@@ -32,16 +32,12 @@ export function CartItemCard({
   onRemoveBlackBg,
   onResize,
 }: Props) {
-  const [expanded, setExpanded] = useState(false)
+  const [resizeOpen, setResizeOpen] = useState(false)
   const [bgProcessing, setBgProcessing] = useState<'white' | 'black' | null>(null)
   const [isResizing, setIsResizing] = useState(false)
 
-  const [targetWidth, setTargetWidth] = useState(
-    item.customData.printWidth.toFixed(3)
-  )
-  const [targetHeight, setTargetHeight] = useState(
-    item.customData.printHeight.toFixed(3)
-  )
+  const [targetWidth, setTargetWidth] = useState(item.customData.printWidth.toFixed(3))
+  const [targetHeight, setTargetHeight] = useState(item.customData.printHeight.toFixed(3))
   const [targetDpi, setTargetDpi] = useState(300)
   const aspectRatio = item.customData.printWidth / item.customData.printHeight
 
@@ -50,7 +46,6 @@ export function CartItemCard({
     const n = parseFloat(val)
     if (!isNaN(n)) setTargetHeight((n / aspectRatio).toFixed(3))
   }
-
   const onHeightChange = (val: string) => {
     setTargetHeight(val)
     const n = parseFloat(val)
@@ -68,7 +63,6 @@ export function CartItemCard({
       formData.append('targetHeightInches', targetHeight)
       formData.append('dpi', String(targetDpi))
       formData.append('format', 'png')
-
       const res = await fetch('/api/resize-image', { method: 'POST', body: formData })
       const data = await res.json()
       if (data.success) await onResize(item.id, data)
@@ -79,116 +73,159 @@ export function CartItemCard({
 
   const handleRemoveWhite = async () => {
     setBgProcessing('white')
-    try { await onRemoveWhiteBg(item.id) }
-    finally { setBgProcessing(null) }
+    try { await onRemoveWhiteBg(item.id) } finally { setBgProcessing(null) }
   }
-
   const handleRemoveBlack = async () => {
     setBgProcessing('black')
-    try { await onRemoveBlackBg(item.id) }
-    finally { setBgProcessing(null) }
+    try { await onRemoveBlackBg(item.id) } finally { setBgProcessing(null) }
   }
 
-  const sqIn = (item.customData.printWidth * item.customData.printHeight).toFixed(1)
+  const sqIn = (item.customData.printWidth * item.customData.printHeight).toFixed(2)
+  // Clamp preview aspect ratio so very tall/wide images don't break the layout
+  const clampedRatio = Math.min(Math.max(aspectRatio, 0.3), 3)
+  // Image preview width: 160px fixed, height derived from ratio (max 220px)
+  const previewW = 160
+  const previewH = Math.min(Math.round(previewW / clampedRatio), 220)
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {/* Large image preview */}
-      <div className="relative w-full h-48 bg-[repeating-conic-gradient(#e5e7eb_0%_25%,#f9fafb_0%_50%)] bg-[length:16px_16px]">
-        {item.thumbnailUrl ? (
-          <Image
-            src={item.thumbnailUrl}
-            alt="Design preview"
-            fill
-            className="object-contain"
-            unoptimized
+      {/* Main content */}
+      <div className="flex gap-4 p-4">
+
+        {/* Left: image preview sized to actual image proportions */}
+        <div className="shrink-0 relative group" style={{ width: previewW, height: previewH }}>
+          <div
+            className="w-full h-full rounded-lg overflow-hidden relative border border-border/60"
+            style={{
+              backgroundImage:
+                'repeating-conic-gradient(#e5e7eb 0% 25%, #f9fafb 0% 50%)',
+              backgroundSize: '12px 12px',
+            }}
+          >
+            {item.thumbnailUrl ? (
+              <Image
+                src={item.thumbnailUrl}
+                alt="Design preview"
+                fill
+                className="object-contain"
+                unoptimized
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                No preview
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right: info */}
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          {/* Filename + delete */}
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-sm font-semibold text-foreground leading-snug break-all">
+              {item.filename || 'design.png'}
+            </p>
+            <button
+              onClick={() => onRemove(item.id)}
+              className="shrink-0 mt-0.5 w-7 h-7 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+              aria-label="Remove item"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          {/* Info grid */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 rounded-lg border border-border/60 bg-secondary/30 px-3 py-2.5">
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Print Size</p>
+              <p className="text-xs text-foreground mt-0.5">
+                {item.customData.printWidth.toFixed(2)}" × {item.customData.printHeight.toFixed(2)}"
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Image Size</p>
+              <p className="text-xs text-foreground mt-0.5">
+                {item.customData.imgWidth} × {item.customData.imgHeight} px
+              </p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">DPI</p>
+              <p className="text-xs text-foreground mt-0.5">{item.customData.dpi}</p>
+            </div>
+            <div>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Total Sq In</p>
+              <p className="text-xs text-foreground mt-0.5">{sqIn} sq in</p>
+            </div>
+          </div>
+
+          {/* Quantity + price */}
+          <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Quantity:</span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => onQuantityChange(item.id, -1)}
+                  className="w-6 h-6 rounded-md border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  aria-label="Decrease quantity"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+                <span className="text-sm font-semibold w-5 text-center">{item.quantity}</span>
+                <button
+                  onClick={() => onQuantityChange(item.id, 1)}
+                  className="w-6 h-6 rounded-md border border-border flex items-center justify-center hover:bg-secondary transition-colors"
+                  aria-label="Increase quantity"
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+            <p className="text-base font-bold text-primary">
+              ${item.price.toFixed(2)} <span className="text-xs font-normal text-muted-foreground">each</span>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom toolbar */}
+      <div className="border-t border-border px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2">
+        {/* Resize checkbox */}
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={resizeOpen}
+            onChange={e => setResizeOpen(e.target.checked)}
+            className="rounded border-border"
           />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm">
-            No preview
-          </div>
-        )}
-        {/* Remove button overlaid top-right */}
-        <button
-          onClick={() => onRemove(item.id)}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shadow-sm"
-          aria-label="Remove item"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </div>
+          <span className="text-xs font-medium text-foreground">🖼 Resize Image</span>
+          <span className="text-xs text-destructive italic">(This will alter your original image)</span>
+        </label>
 
-      {/* Info row */}
-      <div className="flex items-center justify-between gap-3 px-4 pt-3 pb-2">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-foreground truncate">{item.variant.title}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {item.customData.printWidth.toFixed(2)}" × {item.customData.printHeight.toFixed(2)}" · {item.customData.dpi} DPI · {sqIn} sq in
-          </p>
-        </div>
-        <div className="shrink-0 flex flex-col items-end gap-1.5">
-          <p className="text-sm font-bold text-foreground">${item.price.toFixed(2)}</p>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => onQuantityChange(item.id, -1)}
-              className="w-6 h-6 rounded-md border border-border flex items-center justify-center hover:bg-secondary transition-colors"
-              aria-label="Decrease quantity"
-            >
-              <Minus className="h-3 w-3" />
-            </button>
-            <span className="text-sm font-medium w-5 text-center">{item.quantity}</span>
-            <button
-              onClick={() => onQuantityChange(item.id, 1)}
-              className="w-6 h-6 rounded-md border border-border flex items-center justify-center hover:bg-secondary transition-colors"
-              aria-label="Increase quantity"
-            >
-              <Plus className="h-3 w-3" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Expand/collapse toolbar */}
-      <div className="border-t border-border px-4 py-2 flex items-center justify-between">
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-xs h-7 px-2"
+        {/* BG removal buttons */}
+        <div className="flex gap-2 ml-auto">
+          <button
             onClick={handleRemoveWhite}
             disabled={!!bgProcessing || isResizing}
+            className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 flex items-center gap-1 transition-colors"
           >
-            {bgProcessing === 'white' ? (
-              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            ) : null}
+            {bgProcessing === 'white' && <Loader2 className="h-3 w-3 animate-spin" />}
             Remove White BG
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-xs h-7 px-2"
+          </button>
+          <span className="text-border">·</span>
+          <button
             onClick={handleRemoveBlack}
             disabled={!!bgProcessing || isResizing}
+            className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50 flex items-center gap-1 transition-colors"
           >
-            {bgProcessing === 'black' ? (
-              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            ) : null}
+            {bgProcessing === 'black' && <Loader2 className="h-3 w-3 animate-spin" />}
             Remove Black BG
-          </Button>
+          </button>
         </div>
-        <button
-          onClick={() => setExpanded(x => !x)}
-          className="text-muted-foreground hover:text-foreground transition-colors"
-          aria-label="Toggle resize panel"
-        >
-          {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </button>
       </div>
 
       {/* Resize panel */}
-      {expanded && (
+      {resizeOpen && (
         <div className="border-t border-border px-4 py-3 bg-secondary/30 space-y-3">
-          <p className="text-xs font-medium text-foreground">Resize image</p>
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="text-xs text-muted-foreground block mb-1">Width (in)</label>
@@ -234,10 +271,7 @@ export function CartItemCard({
             disabled={isResizing || !!bgProcessing}
           >
             {isResizing ? (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin mr-1.5" />
-                Resizing…
-              </>
+              <><Loader2 className="h-3 w-3 animate-spin mr-1.5" />Resizing…</>
             ) : (
               'Apply Resize'
             )}

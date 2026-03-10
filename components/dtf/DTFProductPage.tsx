@@ -67,13 +67,15 @@ export function DTFProductPage() {
       dpi: number,
       printWidth: number,
       printHeight: number,
-      thumbnailUrl: string
+      thumbnailUrl: string,
+      filename: string
     ) => {
       const id = `cart_${Date.now()}_${Math.random().toString(36).slice(2)}`
       await saveFileToIndexedDB(file, id)
 
       const newItem: CartItem = {
         id,
+        filename,
         variant,
         price: 0,
         quantity: 1,
@@ -152,7 +154,8 @@ export function DTFProductPage() {
             dpi,
             widthIn,
             heightIn,
-            data.imageDataUrl
+            data.imageDataUrl,
+            file.name
           )
           setIsUploading(false)
         }
@@ -414,9 +417,9 @@ export function DTFProductPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
             {/* Upload zone */}
-            <div className="xl:col-span-3">
+            <div className="xl:col-span-1">
               <ImageUploadZone
                 onFileSelected={handleFileUpload}
                 isUploading={isUploading}
@@ -450,7 +453,7 @@ export function DTFProductPage() {
             </div>
 
             {/* Cart */}
-            <div className="xl:col-span-2">
+            <div className="xl:col-span-1">
               <ShoppingCart
                 items={cartItems}
                 totalPrice={totalPrice}
